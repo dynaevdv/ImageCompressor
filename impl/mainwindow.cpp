@@ -10,44 +10,79 @@ ImageCompressor::MainWindow::MainWindow(QSize windowSize, QWidget* parent) : QWi
 
 ImageCompressor::MainWindow::~MainWindow()
 {
-    for (auto  image : m_loadedImages)
-    {
-        delete(image);
-    }
 
-    m_loadedImages.clear();
-
-    delete(m_controlBlock);
-    delete(m_imageBlock);
 }
 
 void ImageCompressor::MainWindow::openAndShowImage()
 {
-    auto pixmap = FileManager::GetPixmapViaGui();
+    auto sourcePixMap = FileManager::GetPixmapViaGui();
 
-    if (pixmap != nullptr)
+    // If user closed GUI or something gone wrong
+    if (sourcePixMap != nullptr)
     {
+        prepareWindowForNewImage();
+
         // Hide all images
         auto label = m_imageBlock->findChildren<QLabel*>("label")[0];
         auto area = m_imageBlock->findChildren<QScrollArea*>("area")[0];
         label->hide();
         area->hide();
 
-        if (isNeedScrollbars(pixmap->size()))
+        // Create Pyramide of images
+        m_activePyramide = new ImagePyramid(sourcePixMap, m_numberOfFilterIteration, m_scaleFactor);
+
+        // Is need scrollarea or a simple label?
+        if (isNeedScrollbars(sourcePixMap->size()))
         {
             auto areaLable = area->findChildren<QLabel*>("labelForScroll")[0];
-            areaLable->setPixmap(*pixmap);
-            areaLable->resize(pixmap->size());
+            QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
+            areaLable->setPixmap(QPixmap::fromImage(compressed));
+            areaLable->resize(m_activePyramide->GetSourceImageSize());
             area->show();
+
+            m_activeLabel = areaLable;
         }
         else
         {
-            label->setPixmap(*pixmap);
+            auto label = m_imageBlock->findChildren<QLabel*>("label")[0];
+            QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
+            label->setPixmap(QPixmap::fromImage(compressed));
+            label->resize(m_activePyramide->GetSourceImageSize());
             label->show();
+
+            m_activeLabel = label;
         }
 
+        // Fill comboboxes
+        auto layercombobox = m_controlBlock->findChildren<QComboBox*>("layercombobox")[0];
+        layercombobox->blockSignals(true);
+        layercombobox->clear();
+        int numOfLayers = m_activePyramide->GetPyramideSize();
+        for(int i = 0; i < numOfLayers; i++)
+        {
+            layercombobox->addItem(QString::number(i));
+        }
+        layercombobox->blockSignals(false);
         m_imageBlock->show();
     }
+}
+
+void ImageCompressor::MainWindow::setPyramideLayer(int index)
+{
+    auto layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(index));
+    layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
+    m_activeLabel->setPixmap(layer);
+    m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
+}
+
+void ImageCompressor::MainWindow::setScaleFactor(float scaleFactor)
+{
+
+}
+
+void ImageCompressor::MainWindow::setNumberOfFilterIterations(int number)
+{
+
 }
 
 void ImageCompressor::MainWindow::initControlBlock()
@@ -61,9 +96,18 @@ void ImageCompressor::MainWindow::initControlBlock()
     auto openFile = new QPushButton(m_controlBlock);
     openFile->setFixedSize(m_openImageButtonWidth, m_heightOfControlBlock);
     openFile->setText("Open new image");
-    openFile->show();
     QObject::connect(openFile, SIGNAL (clicked(bool)),
                      this, SLOT(openAndShowImage()));
+
+    openFile->show();
+
+    // Layer combobox
+    auto layerComboBox = new QComboBox(m_controlBlock);
+    layerComboBox->setObjectName("layercombobox");
+    layerComboBox->setFixedSize(m_layerComboBoxWidth, m_layerComboBoxHeight);
+    layerComboBox->move(m_spaceBetweenElements * 2 + m_openImageButtonWidth, m_heightOfControlBlock / 2 - m_layerComboBoxHeight / 2);
+    QObject::connect(layerComboBox, SIGNAL (currentIndexChanged(int)), this, SLOT (setPyramideLayer(int)));
+    layerComboBox->show();
 }
 
 void ImageCompressor::MainWindow::initImageBlock()
@@ -84,10 +128,22 @@ void ImageCompressor::MainWindow::initImageBlock()
 
     auto area = new QScrollArea(m_imageBlock);
     area->setObjectName("area");
+
     area->setFixedSize(this->size().width() - 2 * m_spaceBetweenElements,
                        this->size().height() - 3 * m_spaceBetweenElements - m_heightOfControlBlock);
+
     area->setWidget(labelForScroll);
     area->hide();
+}
+
+void ImageCompressor::MainWindow::prepareWindowForNewImage()
+{
+    if(m_activePyramide)
+    {
+        delete(m_activePyramide);
+    }
+
+    m_indexOfActiveLayer = 0;
 }
 
 bool ImageCompressor::MainWindow::isNeedScrollbars(const QSize& imageSize)

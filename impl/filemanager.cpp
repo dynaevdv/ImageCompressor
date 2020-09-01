@@ -3,6 +3,7 @@
 QPixmap* ImageCompressor::FileManager::GetPixmapViaGui()
 {
     QPixmap* tmp = new QPixmap(getPathOfImageViaDialog());
+
     if (!tmp->isNull())
     {
         return tmp;

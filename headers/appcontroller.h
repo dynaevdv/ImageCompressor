@@ -16,9 +16,10 @@ namespace ImageCompressor
     {
     public:
         static void CreateWindow(const int& windowW, const int& windowH, const char* windowName);
+        ~AppController();
 
     private:
-        static std::unique_ptr<ImageCompressor::MainWindow> m_mainWindow;
+        static ImageCompressor::MainWindow* m_mainWindow;
         // Can be added vector<unique_ptr<QWidget>> for subwindows
     };
 }
