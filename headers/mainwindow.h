@@ -10,8 +10,10 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QSpacerItem>
+#include <QComboBox>
 
 #include <headers/filemanager.h>
+#include <headers/imagepyramid.h>
 
 namespace ImageCompressor
 {
@@ -25,18 +27,29 @@ namespace ImageCompressor
 
     private slots:
         void openAndShowImage();
+        void setPyramideLayer(int index);
+        void setScaleFactor(float scaleFactor);
+        void setNumberOfFilterIterations(int number);
 
     private:
-        std::vector<QPixmap*> m_loadedImages;
         QWidget* m_controlBlock;
         QWidget* m_imageBlock;
+        QLabel* m_activeLabel;
+        ImagePyramid* m_activePyramide = nullptr;
 
         int m_openImageButtonWidth = 100;
-        int m_heightOfControlBlock = 50;
+        int m_layerComboBoxWidth = 100;
+        int m_layerComboBoxHeight = 20;
+        int m_heightOfControlBlock = 35;
         int m_spaceBetweenElements = 20;
+
+        int m_numberOfFilterIteration = 3;
+        int m_indexOfActiveLayer = 0;
+        float m_scaleFactor = 2.0f;
 
         void initControlBlock();
         void initImageBlock();
+        void prepareWindowForNewImage();
         bool isNeedScrollbars(const QSize& imageSize);
     };
 }

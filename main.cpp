@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    ImageCompressor::AppController::CreateWindow(1200, 800, "main");
+    ImageCompressor::AppController::CreateWindow(800, 600, "main");
 
     return a.exec();
 }
