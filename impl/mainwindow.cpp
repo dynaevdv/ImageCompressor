@@ -77,12 +77,12 @@ void ImageCompressor::MainWindow::setPyramideLayer(int index)
 
 void ImageCompressor::MainWindow::setScaleFactor(float scaleFactor)
 {
-
+    m_scaleFactor = scaleFactor;
 }
 
 void ImageCompressor::MainWindow::setNumberOfFilterIterations(int number)
 {
-
+    m_numberOfFilterIteration = number;
 }
 
 void ImageCompressor::MainWindow::initControlBlock()

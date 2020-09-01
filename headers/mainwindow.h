@@ -27,7 +27,9 @@ namespace ImageCompressor
 
     private slots:
         void openAndShowImage();
-        void changePyramideLayer(int index);
+        void setPyramideLayer(int index);
+        void setScaleFactor(float scaleFactor);
+        void setNumberOfFilterIterations(int number);
 
     private:
         QWidget* m_controlBlock;
