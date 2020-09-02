@@ -2,8 +2,6 @@
 
 ImageCompressor::CompressionManager::CompressionManager()
 {
-    qDebug() << "Manager ctor";
-    m_tmpImage = new QImage();
     m_kernel(0, 0) = 1; m_kernel(0, 1) = 2; m_kernel(0, 2) = 1;
     m_kernel(1, 0) = 2; m_kernel(1, 1) = 4; m_kernel(1, 2) = 2;
     m_kernel(2, 0) = 1; m_kernel(2, 1) = 2; m_kernel(2, 2) = 1;

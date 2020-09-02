@@ -25,7 +25,7 @@ namespace ImageCompressor
         Q_OBJECT
 
     public:
-        AppWindow(QSize windowSize, QWidget *parent = nullptr);
+        AppWindow(const QSize& windowSize, const QString& windowName, QWidget *parent = nullptr);
         ~AppWindow();
 
     private slots:

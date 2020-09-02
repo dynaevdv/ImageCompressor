@@ -1,8 +1,10 @@
 #include <headers/appwindow.h>
 
-ImageCompressor::AppWindow::AppWindow(QSize windowSize, QWidget* parent) : QWidget(parent)
+ImageCompressor::AppWindow::AppWindow(const QSize& windowSize,
+                                      const QString& windowName, QWidget* parent) : QWidget(parent)
 {
-    this->setFixedSize(windowSize);
+    setFixedSize(windowSize);
+    setWindowTitle(windowName);
 
     initControlBlock();
     initImageBlock();
