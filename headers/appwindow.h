@@ -13,34 +13,38 @@
 #include <QSpinBox>
 #include <QSizePolicy>
 
+#include <algorithm>
+
 #include <headers/filemanager.h>
 #include <headers/imagepyramid.h>
 
 namespace ImageCompressor
 {
-    class MainWindow : public QWidget
+    class AppWindow : public QWidget
     {
         Q_OBJECT
 
     public:
-        MainWindow(QSize windowSize, QWidget *parent = nullptr);
-        ~MainWindow();
+        AppWindow(QSize windowSize, QWidget *parent = nullptr);
+        ~AppWindow();
 
     private slots:
         void openAndShowImage();
         void setPyramideLayer(int index);
         void setScaleFactor(float scaleFactor);
         void setNumberOfFilterIterations(int number);
+        void setActivePyramide(int index);
 
     private:
         QWidget* m_controlBlock;
         QWidget* m_imageBlock;
         QLabel* m_activeLabel;
         ImagePyramid* m_activePyramide = nullptr;
+        std::vector<ImagePyramid*> m_pyramides;
 
         int m_heightOfControlBlock = 50;
         int m_openImageButtonWidth = 130;
-        int m_openImageButtonHeight = 40;
+        int m_openImageButtonHeight = 30;
         int m_layerComboBoxWidth = 100;
         int m_layerComboBoxHeight = 20;
         int m_spaceBetweenElements = 20;
@@ -54,10 +58,12 @@ namespace ImageCompressor
         void initImageBlock();
         void initControlBlock();
         void createOpenFileButton();
+        void createFileCombobox();
         void createPyramideLayerCombobox();
         void createScaleFactorSpinbox();
         void createFilteringSpinbox();
-        void fillComboBoxes();
+        void fillLayersCombobox();
+        void fillFilenameCombobox();
 
         void prepareWindowForNewImage();
         bool isNeedScrollbars(const QSize& imageSize);

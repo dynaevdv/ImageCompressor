@@ -15,8 +15,10 @@ namespace ImageCompressor
     {
     public:
         static QPixmap* GetPixmapViaGui();
+        static QString GetLastFilename();
 
     private:
+        static QString m_lastFilePath;
         static QString getPathOfImageViaDialog();
     };
 }

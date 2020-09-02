@@ -1,10 +1,9 @@
 #include <headers/imagepyramid.h>
 
-ImageCompressor::ImagePyramid::ImagePyramid(QPixmap* inputPixmap, const int& numberOfIterations, const float& scaleFactor)
+ImageCompressor::ImagePyramid::ImagePyramid(QPixmap* inputPixmap, const QString& pathToImage)
 {
     m_sourceSize = inputPixmap->size();
-    m_scaleFactor = scaleFactor;
-    m_numberOfFiltrationIterations = numberOfIterations;
+    m_pathToFile = pathToImage;
     m_pyramide.push_back(new QImage(inputPixmap->toImage()));
     calculatePyramide();
 }
@@ -40,9 +39,31 @@ QSize ImageCompressor::ImagePyramid::GetResolutionOfLayer(const int &index)
     return m_pyramide[index]->size();
 }
 
+int ImageCompressor::ImagePyramid::GetDiagonalOfLayer(const int &index)
+{
+    auto size = m_pyramide[index]->size();
+    return size.width() * size.height();
+}
+
 int ImageCompressor::ImagePyramid::GetPyramideSize()
 {
     return m_pyramide.size();
+}
+
+QString ImageCompressor::ImagePyramid::GetFilename()
+{
+    QStringList parts = m_pathToFile.split("/");
+    return parts.at(parts.size() - 1);
+}
+
+QString ImageCompressor::ImagePyramid::GetPathToFile()
+{
+    return m_pathToFile;
+}
+
+void ImageCompressor::ImagePyramid::SetFilename(const QString &name)
+{
+    m_filename = name;
 }
 
 void ImageCompressor::ImagePyramid::SetNumberOfFiltrationIterations(const int &numberOfIterations)

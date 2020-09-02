@@ -8,7 +8,7 @@
 #include <QWindow>
 #include <QIcon>
 
-#include <headers/mainwindow.h>
+#include <headers/appwindow.h>
 
 namespace ImageCompressor
 {
@@ -19,7 +19,7 @@ namespace ImageCompressor
         ~AppController();
 
     private:
-        static ImageCompressor::MainWindow* m_mainWindow;
+        static ImageCompressor::AppWindow* m_mainWindow;
         // Can be added vector<unique_ptr<QWidget>> for subwindows
     };
 }

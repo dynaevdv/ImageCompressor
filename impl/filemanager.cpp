@@ -1,5 +1,8 @@
 #include <headers/filemanager.h>
 
+// Static variables
+QString ImageCompressor::FileManager::m_lastFilePath;
+
 QPixmap* ImageCompressor::FileManager::GetPixmapViaGui()
 {
     QPixmap* tmp = new QPixmap(getPathOfImageViaDialog());
@@ -14,8 +17,16 @@ QPixmap* ImageCompressor::FileManager::GetPixmapViaGui()
     }
 }
 
+QString ImageCompressor::FileManager::GetLastFilename()
+{
+    return m_lastFilePath;
+}
+
 QString ImageCompressor::FileManager::getPathOfImageViaDialog()
 {
-    return QFileDialog::getOpenFileName(0, "Open Dialog",
+    QString path = QFileDialog::getOpenFileName(0, "Open Dialog",
                                         "", "*.bmp *.jpg *.png");
+
+    m_lastFilePath = path;
+    return path;
 }

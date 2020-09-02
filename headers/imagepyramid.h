@@ -14,23 +14,30 @@ namespace ImageCompressor
 class ImagePyramid
 {
 public:
-    ImagePyramid(QPixmap* inputPixmap, const int& numberOfIterations, const float& scaleFactor);
+    ImagePyramid(QPixmap* inputPixmap, const QString& pathToFile);
     ~ImagePyramid();
 
     QImage* GetLayerFromPyramide(const int& index);
     QSize GetSourceImageSize();
     QSize GetResolutionOfLayer(const int& index);
+    int GetDiagonalOfLayer(const int& index);
     int GetPyramideSize();
+    QString GetFilename();
+    QString GetPathToFile();
 
+    void SetFilename(const QString& name);
     void SetNumberOfFiltrationIterations(const int& numberOfIterations);
     void SetScaleFactor(const float& scaleFactor);
 
 private:
     // [0] - source
     std::vector<QImage*> m_pyramide;
+
     QSize m_sourceSize;
-    int m_numberOfFiltrationIterations;
-    float m_scaleFactor;
+    QString m_filename;
+    QString m_pathToFile;
+    int m_numberOfFiltrationIterations = 3;
+    float m_scaleFactor = 2.0f;
 
     void calculatePyramide();
 };
