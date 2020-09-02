@@ -57,11 +57,15 @@ void ImageCompressor::MainWindow::openAndShowImage()
         auto layercombobox = m_controlBlock->findChildren<QComboBox*>("layercombobox")[0];
         layercombobox->blockSignals(true);
         layercombobox->clear();
-        int numOfLayers = m_activePyramide->GetPyramideSize();
-        for(int i = 0; i < numOfLayers; i++)
+
+        for(int i = 0; i < m_activePyramide->GetPyramideSize(); i++)
         {
-            layercombobox->addItem(QString::number(i));
+            layercombobox->addItem(QString::number(i) + ":  " +
+                                   QString::number(m_activePyramide->GetResolutionOfLayer(i).width()) +
+                                   "x" +
+                                   QString::number(m_activePyramide->GetResolutionOfLayer(i).height()));
         }
+
         layercombobox->blockSignals(false);
         m_imageBlock->show();
     }
@@ -92,22 +96,11 @@ void ImageCompressor::MainWindow::initControlBlock()
     m_controlBlock->move(m_spaceBetweenElements, m_spaceBetweenElements);
     m_controlBlock->show();
 
-    // OpenFile button
-    auto openFile = new QPushButton(m_controlBlock);
-    openFile->setFixedSize(m_openImageButtonWidth, m_heightOfControlBlock);
-    openFile->setText("Open new image");
-    QObject::connect(openFile, SIGNAL (clicked(bool)),
-                     this, SLOT(openAndShowImage()));
-
-    openFile->show();
-
-    // Layer combobox
-    auto layerComboBox = new QComboBox(m_controlBlock);
-    layerComboBox->setObjectName("layercombobox");
-    layerComboBox->setFixedSize(m_layerComboBoxWidth, m_layerComboBoxHeight);
-    layerComboBox->move(m_spaceBetweenElements * 2 + m_openImageButtonWidth, m_heightOfControlBlock / 2 - m_layerComboBoxHeight / 2);
-    QObject::connect(layerComboBox, SIGNAL (currentIndexChanged(int)), this, SLOT (setPyramideLayer(int)));
-    layerComboBox->show();
+    createControlLayout();
+    createOpenFileButton();
+    createPyramideLayerCombobox();
+    createFilteringSpinbox();
+    createScaleFactorSpinbox();
 }
 
 void ImageCompressor::MainWindow::initImageBlock()
@@ -134,6 +127,58 @@ void ImageCompressor::MainWindow::initImageBlock()
 
     area->setWidget(labelForScroll);
     area->hide();
+}
+
+void ImageCompressor::MainWindow::createControlLayout()
+{
+    auto layout = new QHBoxLayout();
+    m_controlBlock->setLayout(layout);
+}
+
+void ImageCompressor::MainWindow::createOpenFileButton()
+{
+    auto openFile = new QPushButton(m_controlBlock);
+    //m_controlBlock->layout()->addWidget(openFile);
+    openFile->setFixedSize(m_openImageButtonWidth, m_heightOfControlBlock);
+    openFile->setText("Open new image");
+    QObject::connect(openFile, SIGNAL (clicked(bool)),
+                     this, SLOT(openAndShowImage()));
+
+    openFile->show();
+}
+
+void ImageCompressor::MainWindow::createPyramideLayerCombobox()
+{
+    auto layerComboBox = new QComboBox(m_controlBlock);
+    layerComboBox->setObjectName("layercombobox");
+    layerComboBox->setFixedSize(m_layerComboBoxWidth, m_layerComboBoxHeight);
+    layerComboBox->move(m_spaceBetweenElements * 2 + m_openImageButtonWidth, m_heightOfControlBlock / 2 - m_layerComboBoxHeight / 2);
+    QObject::connect(layerComboBox, SIGNAL (currentIndexChanged(int)), this, SLOT (setPyramideLayer(int)));
+    layerComboBox->show();
+}
+
+void ImageCompressor::MainWindow::createScaleFactorSpinbox()
+{
+    auto spinbox = new QDoubleSpinBox(m_controlBlock);;
+    spinbox->move(m_spaceBetweenElements * 3 + m_openImageButtonWidth + m_layerComboBoxWidth,
+                              m_heightOfControlBlock / 2 - m_dialogsHeight / 2);
+
+    spinbox->setFixedSize(m_dialogsWidth, m_dialogsHeight);
+    spinbox->setObjectName("scalespinbox");
+    spinbox->setValue(2.0);
+    spinbox->show();
+}
+
+void ImageCompressor::MainWindow::createFilteringSpinbox()
+{
+    auto spinbox = new QSpinBox(m_controlBlock);
+    spinbox->move(m_spaceBetweenElements * 4 + m_openImageButtonWidth + m_layerComboBoxWidth + m_dialogsWidth,
+                              m_heightOfControlBlock / 2 - m_dialogsHeight / 2);
+
+    spinbox->setFixedSize(m_dialogsWidth, m_dialogsHeight);
+    spinbox->setValue(3);
+    spinbox->setObjectName("filterspinbox");
+    spinbox->show();
 }
 
 void ImageCompressor::MainWindow::prepareWindowForNewImage()

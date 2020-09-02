@@ -19,6 +19,7 @@ public:
 
     QImage* GetLayerFromPyramide(const int& index);
     QSize GetSourceImageSize();
+    QSize GetResolutionOfLayer(const int& index);
     int GetPyramideSize();
 
     void SetNumberOfFiltrationIterations(const int& numberOfIterations);

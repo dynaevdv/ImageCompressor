@@ -9,8 +9,8 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QScrollArea>
-#include <QSpacerItem>
 #include <QComboBox>
+#include <QSpinBox>
 
 #include <headers/filemanager.h>
 #include <headers/imagepyramid.h>
@@ -42,6 +42,8 @@ namespace ImageCompressor
         int m_layerComboBoxHeight = 20;
         int m_heightOfControlBlock = 35;
         int m_spaceBetweenElements = 20;
+        int m_dialogsHeight = 20;
+        int m_dialogsWidth = 50;
 
         int m_numberOfFilterIteration = 3;
         int m_indexOfActiveLayer = 0;
@@ -49,6 +51,12 @@ namespace ImageCompressor
 
         void initControlBlock();
         void initImageBlock();
+        void createControlLayout();
+        void createOpenFileButton();
+        void createPyramideLayerCombobox();
+        void createScaleFactorSpinbox();
+        void createFilteringSpinbox();
+
         void prepareWindowForNewImage();
         bool isNeedScrollbars(const QSize& imageSize);
     };
