@@ -11,11 +11,11 @@
 
 namespace ImageCompressor
 {
-class ImagePyramid
+class ImagePyramide
 {
 public:
-    ImagePyramid(QPixmap* inputPixmap, const QString& pathToFile);
-    ~ImagePyramid();
+    ImagePyramide(QPixmap* inputPixmap, const QString& pathToFile);
+    ~ImagePyramide();
 
     QImage* GetLayerFromPyramide(const int& index);
     QSize GetSourceImageSize();
@@ -25,7 +25,7 @@ public:
     QString GetFilename();
     QString GetPathToFile();
 
-    void SetFilename(const QString& name);
+    void SetFilePath(const QString& path);
     void SetNumberOfFiltrationIterations(const int& numberOfIterations);
     void SetScaleFactor(const float& scaleFactor);
 

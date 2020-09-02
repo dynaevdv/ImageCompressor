@@ -39,8 +39,8 @@ namespace ImageCompressor
         QWidget* m_controlBlock;
         QWidget* m_imageBlock;
         QLabel* m_activeLabel;
-        ImagePyramid* m_activePyramide = nullptr;
-        std::vector<ImagePyramid*> m_pyramides;
+        ImagePyramide* m_activePyramide = nullptr;
+        std::vector<ImagePyramide*> m_pyramides;
 
         int m_heightOfControlBlock = 50;
         int m_openImageButtonWidth = 130;
@@ -64,8 +64,11 @@ namespace ImageCompressor
         void createFilteringSpinbox();
         void fillLayersCombobox();
         void fillFilenameCombobox();
-
         void prepareWindowForNewImage();
+        void sortPyramidesByDiagonal();
+        void addNewPyramide(QPixmap* image, const QString& filepath);
+        void renderPyramide(ImagePyramide* pyramide);
+
         bool isNeedScrollbars(const QSize& imageSize);
     };
 }

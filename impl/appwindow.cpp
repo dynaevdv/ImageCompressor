@@ -22,46 +22,13 @@ void ImageCompressor::AppWindow::openAndShowImage()
     {
         prepareWindowForNewImage();
 
-        // Hide all images
-        QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
-        QScrollArea* area = m_imageBlock->findChildren<QScrollArea*>("area")[0];
-        label->hide();
-        area->hide();
+        addNewPyramide(sourcePixMap,
+                       FileManager::GetLastFilename());
 
-        // Create Pyramide of images
-        m_pyramides.push_back(new ImagePyramid(sourcePixMap,
-                                               ImageCompressor::FileManager::GetLastFilename()));
-
-        m_activePyramide = m_pyramides.back();
-        m_activePyramide->SetNumberOfFiltrationIterations(m_numberOfFilterIteration);
-        m_activePyramide->SetScaleFactor(m_scaleFactor);
-
-        // Is need scrollarea or a simple label?
-        if (isNeedScrollbars(sourcePixMap->size()))
-        {
-            QLabel* areaLable = area->findChildren<QLabel*>("labelForScroll")[0];
-            QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-            areaLable->setPixmap(QPixmap::fromImage(compressed));
-            areaLable->resize(m_activePyramide->GetSourceImageSize());
-            area->show();
-
-            m_activeLabel = areaLable;
-        }
-        else
-        {
-            QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
-            QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-            label->setPixmap(QPixmap::fromImage(compressed));
-            label->resize(m_activePyramide->GetSourceImageSize());
-            label->show();
-
-            m_activeLabel = label;
-        }
+        renderPyramide(m_activePyramide);
 
         fillLayersCombobox();
         fillFilenameCombobox();
-
-        m_imageBlock->show();
     }
 }
 
@@ -86,10 +53,12 @@ void ImageCompressor::AppWindow::setNumberOfFilterIterations(int number)
 void ImageCompressor::AppWindow::setActivePyramide(int index)
 {
     m_activePyramide = m_pyramides[index];
-    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(index));
+    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(0));
     layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
     m_activeLabel->setPixmap(layer);
     m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
+
+    fillLayersCombobox();
 }
 
 void ImageCompressor::AppWindow::initControlBlock()
@@ -115,7 +84,7 @@ void ImageCompressor::AppWindow::initImageBlock()
 
     // Scrollview area and his lable
     QLabel* labelForScroll = new QLabel(m_imageBlock);
-    labelForScroll->setObjectName("labelForScroll");
+    labelForScroll->setObjectName("labelforscroll");
     labelForScroll->hide();
 
     QScrollArea* area = new QScrollArea(m_imageBlock);
@@ -222,26 +191,93 @@ void ImageCompressor::AppWindow::fillFilenameCombobox()
     combobox->blockSignals(true);
     combobox->clear();
 
-    // Sort by resolution of sourceimage
-    std::map<int, QString> pyramides; // diagonal - filename
+    sortPyramidesByDiagonal();
 
-    // Fill our map
     for (auto pyramide : m_pyramides)
     {
-        pyramides.insert(std::make_pair<int, QString>(pyramide->GetDiagonalOfLayer(0),
-                                                      pyramide->GetFilename()));
+        combobox->addItem(pyramide->GetFilename());
     }
 
-    // Fill combobox with sorted dictionary
-    for (auto iter = pyramides.begin(); iter != pyramides.end(); iter++)
+    // Find index of activepyramide
+    for (int i = 0; i < m_pyramides.size(); i++)
     {
-        combobox->addItem(iter->second);
+        if (m_pyramides[i] == m_activePyramide)
+        {
+            combobox->setCurrentIndex(i);
+        }
     }
+
+    combobox->blockSignals(false);
 }
 
 void ImageCompressor::AppWindow::prepareWindowForNewImage()
 {
+    // Hide all previous images
+    QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
+    label->clear();
+    label->hide();
+    QScrollArea* scrollArea = m_imageBlock->findChildren<QScrollArea*>("area")[0];
+    label = scrollArea->findChildren<QLabel*>("labelforscroll")[0];
+    label->clear();
+    scrollArea->hide();
+
     m_indexOfActiveLayer = 0;
+}
+
+void ImageCompressor::AppWindow::sortPyramidesByDiagonal()
+{
+    struct PyramidesDiagonalComparer
+    {
+        bool operator() (ImagePyramide* first, ImagePyramide* second)
+        {
+            return (first->GetDiagonalOfLayer(0) < second->GetDiagonalOfLayer(0));
+        }
+    };
+
+    std::sort(m_pyramides.begin(), m_pyramides.end(), PyramidesDiagonalComparer());
+
+}
+
+void ImageCompressor::AppWindow::addNewPyramide(QPixmap *image, const QString &filepath)
+{
+    ImagePyramide* pyramide = new ImagePyramide(image,
+                                                ImageCompressor::FileManager::GetLastFilename());
+
+    pyramide->SetNumberOfFiltrationIterations(m_numberOfFilterIteration);
+    pyramide->SetScaleFactor(m_scaleFactor);
+    pyramide->SetFilePath(filepath);
+    m_activePyramide = pyramide;
+
+    m_pyramides.push_back(pyramide);
+}
+
+void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *pyramide)
+{
+
+    // Is need scrollarea or a simple label?
+    if (isNeedScrollbars(m_activePyramide->GetSourceImageSize()))
+    {
+        QScrollArea* area = m_imageBlock->findChildren<QScrollArea*>("area")[0];
+        QLabel* areaLable = area->findChildren<QLabel*>("labelforscroll")[0];
+        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
+        areaLable->setPixmap(QPixmap::fromImage(compressed));
+        areaLable->resize(m_activePyramide->GetSourceImageSize());
+        area->show();
+
+        m_activeLabel = areaLable;
+    }
+    else
+    {
+        QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
+        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
+        label->setPixmap(QPixmap::fromImage(compressed));
+        label->resize(m_activePyramide->GetSourceImageSize());
+        label->show();
+
+        m_activeLabel = label;
+    }
+
+    m_imageBlock->show();
 }
 
 bool ImageCompressor::AppWindow::isNeedScrollbars(const QSize& imageSize)
