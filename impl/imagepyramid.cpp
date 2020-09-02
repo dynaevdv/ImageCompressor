@@ -1,15 +1,14 @@
 #include <headers/imagepyramid.h>
 
-ImageCompressor::ImagePyramid::ImagePyramid(QPixmap* inputPixmap, const int& numberOfIterations, const float& scaleFactor)
+ImageCompressor::ImagePyramide::ImagePyramide(QPixmap* inputPixmap, const QString& pathToImage)
 {
     m_sourceSize = inputPixmap->size();
-    m_scaleFactor = scaleFactor;
-    m_numberOfFiltrationIterations = numberOfIterations;
+    m_pathToFile = pathToImage;
     m_pyramide.push_back(new QImage(inputPixmap->toImage()));
     calculatePyramide();
 }
 
-ImageCompressor::ImagePyramid::~ImagePyramid()
+ImageCompressor::ImagePyramide::~ImagePyramide()
 {
     for (auto image : m_pyramide)
     {
@@ -19,38 +18,60 @@ ImageCompressor::ImagePyramid::~ImagePyramid()
     m_pyramide.clear();
 }
 
-QImage* ImageCompressor::ImagePyramid::GetLayerFromPyramide(const int &index)
+QImage* ImageCompressor::ImagePyramide::GetLayerFromPyramide(const int &index)
 {
     qDebug() << "Getlayer:" << index;
     return m_pyramide[index];
 }
 
-void ImageCompressor::ImagePyramid::SetScaleFactor(const float &scaleFactor)
+void ImageCompressor::ImagePyramide::SetScaleFactor(const float &scaleFactor)
 {
     m_scaleFactor = scaleFactor;
 }
 
-QSize ImageCompressor::ImagePyramid::GetSourceImageSize()
+QSize ImageCompressor::ImagePyramide::GetSourceImageSize()
 {
     return m_sourceSize;
 }
 
-QSize ImageCompressor::ImagePyramid::GetResolutionOfLayer(const int &index)
+QSize ImageCompressor::ImagePyramide::GetResolutionOfLayer(const int &index)
 {
     return m_pyramide[index]->size();
 }
 
-int ImageCompressor::ImagePyramid::GetPyramideSize()
+int ImageCompressor::ImagePyramide::GetDiagonalOfLayer(const int &index)
+{
+    auto size = m_pyramide[index]->size();
+    return size.width() * size.height();
+}
+
+int ImageCompressor::ImagePyramide::GetPyramideSize()
 {
     return m_pyramide.size();
 }
 
-void ImageCompressor::ImagePyramid::SetNumberOfFiltrationIterations(const int &numberOfIterations)
+QString ImageCompressor::ImagePyramide::GetFilename()
+{
+    QStringList parts = m_pathToFile.split("/");
+    return parts.at(parts.size() - 1);
+}
+
+QString ImageCompressor::ImagePyramide::GetPathToFile()
+{
+    return m_pathToFile;
+}
+
+void ImageCompressor::ImagePyramide::SetFilePath(const QString &path)
+{
+    m_pathToFile = path;
+}
+
+void ImageCompressor::ImagePyramide::SetNumberOfFiltrationIterations(const int &numberOfIterations)
 {
     m_numberOfFiltrationIterations = numberOfIterations;
 }
 
-void ImageCompressor::ImagePyramid::calculatePyramide()
+void ImageCompressor::ImagePyramide::calculatePyramide()
 {
     QImage* source = m_pyramide[0]; // Source image
 
