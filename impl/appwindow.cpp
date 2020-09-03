@@ -5,7 +5,6 @@ ImageCompressor::AppWindow::AppWindow(const QSize& windowSize,
 {
     setFixedSize(windowSize);
     setWindowTitle(windowName);
-
     initControlBlock();
     initImageBlock();
 }
@@ -17,7 +16,7 @@ ImageCompressor::AppWindow::~AppWindow()
 
 void ImageCompressor::AppWindow::openAndShowImage()
 {
-    QPixmap* sourcePixMap = FileManager::GetPixmapViaGui();
+    QPixmap* sourcePixMap = FileManager::GetPixmapFromFile(FileManager::GetPathOfImageViaDialog());
 
     // Check for closed GUI or something gone wrong
     if (sourcePixMap != nullptr)
@@ -25,9 +24,9 @@ void ImageCompressor::AppWindow::openAndShowImage()
         prepareWindowForNewImage();
 
         addNewPyramide(sourcePixMap,
-                       FileManager::GetLastFilename());
+                       FileManager::GetLastFileName());
 
-        renderPyramide(m_activePyramide);
+        renderActivePyramide();
 
         fillLayersCombobox();
         fillFilenameCombobox();
@@ -36,29 +35,36 @@ void ImageCompressor::AppWindow::openAndShowImage()
 
 void ImageCompressor::AppWindow::setPyramideLayer(int index)
 {
-    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(index));
-    layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    m_activeLabel->setPixmap(layer);
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(index));
     m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
 }
 
-void ImageCompressor::AppWindow::setScaleFactor(float scaleFactor)
+void ImageCompressor::AppWindow::setScaleFactor()
 {
-    m_scaleFactor = scaleFactor;
+    qDebug() << "SetScalefactor";
+    m_activePyramide->SetScaleFactor(m_controlBlock->findChildren<QDoubleSpinBox*>
+                                     ("scalespinbox")[0]->value());
+
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(0));
+    fillLayersCombobox();
 }
 
-void ImageCompressor::AppWindow::setNumberOfFilterIterations(int number)
+void ImageCompressor::AppWindow::setNumberOfFilterIterations()
 {
-    m_numberOfFilterIteration = number;
+    m_activePyramide->SetNumberOfFiltrationIterations(m_controlBlock->findChildren<QSpinBox*>
+                                                      ("filterspinbox")[0]->value());
+
+    int actualIndex = m_controlBlock->findChildren<QComboBox*>("layercombobox")[0]->currentIndex();
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(actualIndex));
 }
 
 void ImageCompressor::AppWindow::setActivePyramide(int index)
 {
     m_activePyramide = m_pyramides[index];
-    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(0));
-    layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    m_activeLabel->setPixmap(layer);
-    m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
+
+    prepareWindowForNewImage();
+
+    renderActivePyramide();
 
     fillLayersCombobox();
 }
@@ -70,12 +76,13 @@ void ImageCompressor::AppWindow::initControlBlock()
     m_controlBlock->show();
 
     initLayoutWithElements();
+    areInputFieldsSignalsBlocked(true);
 }
 
 void ImageCompressor::AppWindow::initImageBlock()
 {
     m_imageBlock = new QWidget(this);
-    m_imageBlock->move(m_spaceBetweenElements, m_heightOfControlBlock + m_spaceBetweenElements * 2);
+    m_imageBlock->move(m_spaceBetweenElements, m_heightOfControlBlock + m_spaceBetweenElements);
     m_imageBlock->setFixedSize(this->size().width(),
                                this->size().height() - m_heightOfControlBlock - m_spaceBetweenElements);
 
@@ -150,22 +157,32 @@ void ImageCompressor::AppWindow::createPyramideLayerCombobox()
 void ImageCompressor::AppWindow::createScaleFactorSpinbox()
 {
     QDoubleSpinBox* spinbox = new QDoubleSpinBox();
-    QLabel* label = new QLabel("  ScaleFactor for compressing:");
+    QLabel* label = new QLabel("  ScaleFactor for compressing [1.1, 10]:");
     m_controlBlock->layout()->addWidget(label);
     m_controlBlock->layout()->addWidget(spinbox);
     spinbox->setObjectName("scalespinbox");
-    spinbox->setValue(2.0);
+    spinbox->setMinimum(1.1);
+    spinbox->setMaximum(10);
+    label->setObjectName("scalelabel");
+    spinbox->setValue(m_defScaleFactor);
+
+    QObject::connect(spinbox, SIGNAL (editingFinished()), this, SLOT (setScaleFactor()));
     spinbox->show();
 }
 
 void ImageCompressor::AppWindow::createFilteringSpinbox()
 {
     QSpinBox* spinbox = new QSpinBox();
-    QLabel* label = new QLabel("  Number of gaussian filtering iterations on each compressing stage:");
+    QLabel* label = new QLabel("  Number of gaussian filtering iterations on each compressing stage [0, 20]:");
     m_controlBlock->layout()->addWidget(label);
     m_controlBlock->layout()->addWidget(spinbox);
-    spinbox->setValue(3);
+    spinbox->setValue(m_defNumberOfFilterIteration);
+    spinbox->setMinimum(0);
+    spinbox->setMaximum(20);
     spinbox->setObjectName("filterspinbox");
+    label->setObjectName("filteringlabel");
+
+    QObject::connect(spinbox, SIGNAL (editingFinished()), this, SLOT (setNumberOfFilterIterations()));
     spinbox->show();
 }
 
@@ -243,26 +260,24 @@ void ImageCompressor::AppWindow::sortPyramidesByDiagonal()
 void ImageCompressor::AppWindow::addNewPyramide(QPixmap *image, const QString &filepath)
 {
     ImagePyramide* pyramide = new ImagePyramide(image,
-                                                ImageCompressor::FileManager::GetLastFilename());
+                                                ImageCompressor::FileManager::GetLastFileName());
 
-    pyramide->SetNumberOfFiltrationIterations(m_numberOfFilterIteration);
-    pyramide->SetScaleFactor(m_scaleFactor);
+    pyramide->SetNumberOfFiltrationIterations(m_defNumberOfFilterIteration);
+    pyramide->SetScaleFactor(m_defScaleFactor);
     pyramide->SetFilePath(filepath);
     m_activePyramide = pyramide;
 
     m_pyramides.push_back(pyramide);
 }
 
-void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *pyramide)
+void ImageCompressor::AppWindow::renderActivePyramide()
 {
-
     // Is need scrollarea or a simple label?
     if (isNeedScrollbars(m_activePyramide->GetSourceImageSize()))
     {
         QScrollArea* area = m_imageBlock->findChildren<QScrollArea*>("area")[0];
         QLabel* areaLable = area->findChildren<QLabel*>("labelforscroll")[0];
-        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-        areaLable->setPixmap(QPixmap::fromImage(compressed));
+        areaLable->setPixmap(m_activePyramide->GetPyramideLayer(0));
         areaLable->resize(m_activePyramide->GetSourceImageSize());
         area->show();
 
@@ -271,8 +286,7 @@ void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *
     else
     {
         QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
-        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-        label->setPixmap(QPixmap::fromImage(compressed));
+        label->setPixmap(m_activePyramide->GetPyramideLayer(0));
         label->resize(m_activePyramide->GetSourceImageSize());
         label->show();
 
@@ -280,6 +294,13 @@ void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *
     }
 
     m_imageBlock->show();
+    areInputFieldsSignalsBlocked(false);
+}
+
+void ImageCompressor::AppWindow::areInputFieldsSignalsBlocked(const bool &isBlocked)
+{
+    m_controlBlock->findChildren<QWidget*>("scalespinbox")[0]->blockSignals(isBlocked);
+    m_controlBlock->findChildren<QWidget*>("filterspinbox")[0]->blockSignals(isBlocked);
 }
 
 bool ImageCompressor::AppWindow::isNeedScrollbars(const QSize& imageSize)

@@ -12,15 +12,14 @@ namespace ImageCompressor
         static CompressionManager& Instance();
         ~CompressionManager();
 
-        void CompressImage(QImage* image, int numOfIterations);
+        void ApplyGaussianFilterToImage(QImage* image, int numOfIterations);
 
     private:
         CompressionManager();
 
         // Variables for perfomance optimization
-        QImage* m_tmpImage;
         QMatrix3x3 m_kernel;
-        float m_kernelSum;
+        float m_kernelSum = 16.0f;
     };
 }
 

@@ -3,9 +3,9 @@
 // Static variables
 QString ImageCompressor::FileManager::m_lastFilePath;
 
-QPixmap* ImageCompressor::FileManager::GetPixmapViaGui()
+QPixmap* ImageCompressor::FileManager::GetPixmapFromFile(QString path)
 {
-    QPixmap* tmp = new QPixmap(getPathOfImageViaDialog());
+    QPixmap* tmp = new QPixmap(path);
 
     if (!tmp->isNull())
     {
@@ -17,12 +17,12 @@ QPixmap* ImageCompressor::FileManager::GetPixmapViaGui()
     }
 }
 
-QString ImageCompressor::FileManager::GetLastFilename()
+QString ImageCompressor::FileManager::GetLastFileName()
 {
     return m_lastFilePath;
 }
 
-QString ImageCompressor::FileManager::getPathOfImageViaDialog()
+QString ImageCompressor::FileManager::GetPathOfImageViaDialog()
 {
     QString path = QFileDialog::getOpenFileName(0, "Open Dialog",
                                         "", "*.bmp *.jpg *.png");

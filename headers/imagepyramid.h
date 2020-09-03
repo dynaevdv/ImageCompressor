@@ -8,6 +8,7 @@
 #include <QPixmap>
 
 #include <headers/compressionmanager.h>
+#include <headers/filemanager.h>
 
 namespace ImageCompressor
 {
@@ -17,8 +18,8 @@ public:
     ImagePyramide(QPixmap* inputPixmap, const QString& pathToFile);
     ~ImagePyramide();
 
-    QImage* GetLayerFromPyramide(const int& index);
     QSize GetSourceImageSize();
+    QPixmap GetPyramideLayer(const int& layerIndex);
     QSize GetResolutionOfLayer(const int& index);
     int GetDiagonalOfLayer(const int& index);
     int GetPyramideSize();
@@ -31,15 +32,15 @@ public:
 
 private:
     // [0] - source
-    std::vector<QImage*> m_pyramide;
+    std::vector<QSize> m_layerResolutions;
 
     QSize m_sourceSize;
-    QString m_filename;
+    QPixmap* m_sourceImage;
     QString m_pathToFile;
     int m_numberOfFiltrationIterations = 3;
     float m_scaleFactor = 2.0f;
 
-    void calculatePyramide();
+    void calculateLayerResolutions();
 };
 }
 

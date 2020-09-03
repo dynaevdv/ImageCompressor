@@ -31,8 +31,8 @@ namespace ImageCompressor
     private slots:
         void openAndShowImage();
         void setPyramideLayer(int index);
-        void setScaleFactor(float scaleFactor);
-        void setNumberOfFilterIterations(int number);
+        void setScaleFactor();
+        void setNumberOfFilterIterations();
         void setActivePyramide(int index);
 
     private:
@@ -50,9 +50,9 @@ namespace ImageCompressor
         int m_spaceBetweenElements = 20;
         int m_comboboxWidth = 150;
 
-        int m_numberOfFilterIteration = 3;
+        int m_defNumberOfFilterIteration = 1;
         int m_indexOfActiveLayer = 0;
-        float m_scaleFactor = 2.0f;
+        float m_defScaleFactor = 2.0f;
 
         void initLayoutWithElements();
         void initImageBlock();
@@ -67,7 +67,8 @@ namespace ImageCompressor
         void prepareWindowForNewImage();
         void sortPyramidesByDiagonal();
         void addNewPyramide(QPixmap* image, const QString& filepath);
-        void renderPyramide(ImagePyramide* pyramide);
+        void renderActivePyramide();
+        void areInputFieldsSignalsBlocked(const bool &isBlocked);
 
         bool isNeedScrollbars(const QSize& imageSize);
     };
