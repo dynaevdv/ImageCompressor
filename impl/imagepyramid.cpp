@@ -16,6 +16,7 @@ ImageCompressor::ImagePyramide::~ImagePyramide()
 void ImageCompressor::ImagePyramide::SetScaleFactor(const float &scaleFactor)
 {
     m_scaleFactor = scaleFactor;
+    calculateLayerResolutions();
 }
 
 QSize ImageCompressor::ImagePyramide::GetSourceImageSize()
@@ -30,9 +31,10 @@ QPixmap ImageCompressor::ImagePyramide::GetPyramideLayer(const int &layerIndex)
     for (int i = 0; i < layerIndex; i++)
     {
         CompressionManager::Instance().ApplyGaussianFilterToImage(&tmpImage, m_numberOfFiltrationIterations);
-        tmpImage.scaled(m_layerResolutions[i]);
+        tmpImage = tmpImage.scaled(m_layerResolutions[i + 1], Qt::KeepAspectRatioByExpanding);
     }
 
+    tmpImage = tmpImage.scaled(m_layerResolutions[0], Qt::KeepAspectRatioByExpanding);
     return QPixmap::fromImage(tmpImage);
 }
 
@@ -74,13 +76,15 @@ void ImageCompressor::ImagePyramide::SetNumberOfFiltrationIterations(const int &
 
 void ImageCompressor::ImagePyramide::calculateLayerResolutions()
 {
+    m_layerResolutions.clear();
+
     QSize tmp = m_sourceImage->size();
     m_layerResolutions.push_back(tmp); // [0] - source resolution
 
     while (tmp.width() > 2 && tmp.height() > 2)
     {
-        tmp.setWidth(std::round((float) tmp.width() / m_scaleFactor));
-        tmp.setHeight(std::round((float) tmp.height() / m_scaleFactor));
+        tmp.setWidth((float) tmp.width() / m_scaleFactor);
+        tmp.setHeight((float) tmp.height() / m_scaleFactor);
         m_layerResolutions.push_back(tmp);
     }
 }

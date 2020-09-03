@@ -26,9 +26,9 @@ void ImageCompressor::CompressionManager::ApplyGaussianFilterToImage(QImage *ima
     {
         auto m_tmpImage = image->copy();
 
-        for(int i = 1; i < m_tmpImage.width() - 1; i++)
+        for(int i = 3; i < m_tmpImage.width() - 1; i++)
         {
-            for(int j = 1; j < m_tmpImage.height() - 1; j++)
+            for(int j = 3; j < m_tmpImage.height() - 1; j++)
             {
                 float red = 0, green = 0, blue = 0;
 

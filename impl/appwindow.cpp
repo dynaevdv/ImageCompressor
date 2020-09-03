@@ -5,7 +5,6 @@ ImageCompressor::AppWindow::AppWindow(const QSize& windowSize,
 {
     setFixedSize(windowSize);
     setWindowTitle(windowName);
-
     initControlBlock();
     initImageBlock();
 }
@@ -36,30 +35,33 @@ void ImageCompressor::AppWindow::openAndShowImage()
 
 void ImageCompressor::AppWindow::setPyramideLayer(int index)
 {
-    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(0));
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(index));
     m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
 }
 
-void ImageCompressor::AppWindow::setScaleFactor(float scaleFactor)
+void ImageCompressor::AppWindow::setScaleFactor()
 {
-    m_scaleFactor = scaleFactor;
+    qDebug() << "SetScalefactor";
+    m_activePyramide->SetScaleFactor(m_controlBlock->findChildren<QDoubleSpinBox*>
+                                     ("scalespinbox")[0]->value());
+
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(0));
+    fillLayersCombobox();
 }
 
-void ImageCompressor::AppWindow::setNumberOfFilterIterations(int number)
+void ImageCompressor::AppWindow::setNumberOfFilterIterations()
 {
-    m_numberOfFilterIteration = number;
+    m_activePyramide->SetNumberOfFiltrationIterations(m_controlBlock->findChildren<QSpinBox*>
+                                                      ("filterspinbox")[0]->value());
 }
 
 void ImageCompressor::AppWindow::setActivePyramide(int index)
 {
     m_activePyramide = m_pyramides[index];
 
-    QPixmap* layer = m_activePyramide->GetPyramideLayer(0);
+    prepareWindowForNewImage();
 
-    m_activeLabel->setPixmap(*layer);
-    m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
-
-    delete(layer);
+    renderPyramide(m_activePyramide);
 
     fillLayersCombobox();
 }
@@ -155,7 +157,9 @@ void ImageCompressor::AppWindow::createScaleFactorSpinbox()
     m_controlBlock->layout()->addWidget(label);
     m_controlBlock->layout()->addWidget(spinbox);
     spinbox->setObjectName("scalespinbox");
-    spinbox->setValue(2.0);
+    spinbox->setValue(m_defScaleFactor);
+
+    QObject::connect(spinbox, SIGNAL (editingFinished()), this, SLOT (setScaleFactor()));
     spinbox->show();
 }
 
@@ -165,8 +169,10 @@ void ImageCompressor::AppWindow::createFilteringSpinbox()
     QLabel* label = new QLabel("  Number of gaussian filtering iterations on each compressing stage:");
     m_controlBlock->layout()->addWidget(label);
     m_controlBlock->layout()->addWidget(spinbox);
-    spinbox->setValue(3);
+    spinbox->setValue(m_defNumberOfFilterIteration);
     spinbox->setObjectName("filterspinbox");
+
+    QObject::connect(spinbox, SIGNAL (editingFinished()), this, SLOT (setNumberOfFilterIterations()));
     spinbox->show();
 }
 
@@ -246,8 +252,8 @@ void ImageCompressor::AppWindow::addNewPyramide(QPixmap *image, const QString &f
     ImagePyramide* pyramide = new ImagePyramide(image,
                                                 ImageCompressor::FileManager::GetLastFileName());
 
-    pyramide->SetNumberOfFiltrationIterations(m_numberOfFilterIteration);
-    pyramide->SetScaleFactor(m_scaleFactor);
+    pyramide->SetNumberOfFiltrationIterations(m_defNumberOfFilterIteration);
+    pyramide->SetScaleFactor(m_defScaleFactor);
     pyramide->SetFilePath(filepath);
     m_activePyramide = pyramide;
 
@@ -256,14 +262,12 @@ void ImageCompressor::AppWindow::addNewPyramide(QPixmap *image, const QString &f
 
 void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *pyramide)
 {
-
     // Is need scrollarea or a simple label?
     if (isNeedScrollbars(m_activePyramide->GetSourceImageSize()))
     {
         QScrollArea* area = m_imageBlock->findChildren<QScrollArea*>("area")[0];
         QLabel* areaLable = area->findChildren<QLabel*>("labelforscroll")[0];
-        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-        areaLable->setPixmap(QPixmap::fromImage(compressed));
+        areaLable->setPixmap(m_activePyramide->GetPyramideLayer(0));
         areaLable->resize(m_activePyramide->GetSourceImageSize());
         area->show();
 
@@ -272,8 +276,7 @@ void ImageCompressor::AppWindow::renderPyramide(ImageCompressor::ImagePyramide *
     else
     {
         QLabel* label = m_imageBlock->findChildren<QLabel*>("label")[0];
-        QImage compressed = *m_activePyramide->GetLayerFromPyramide(m_indexOfActiveLayer);
-        label->setPixmap(QPixmap::fromImage(compressed));
+        label->setPixmap(m_activePyramide->GetPyramideLayer(0));
         label->resize(m_activePyramide->GetSourceImageSize());
         label->show();
 
