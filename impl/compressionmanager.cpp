@@ -5,6 +5,7 @@ ImageCompressor::CompressionManager::CompressionManager()
     m_kernel(0, 0) = 1; m_kernel(0, 1) = 2; m_kernel(0, 2) = 1;
     m_kernel(1, 0) = 2; m_kernel(1, 1) = 4; m_kernel(1, 2) = 2;
     m_kernel(2, 0) = 1; m_kernel(2, 1) = 2; m_kernel(2, 2) = 1;
+
     m_kernelSum = 16.0f;
 }
 
@@ -16,7 +17,7 @@ ImageCompressor::CompressionManager &ImageCompressor::CompressionManager::Instan
 
 ImageCompressor::CompressionManager::~CompressionManager()
 {
-    delete(m_tmpImage);
+
 }
 
 void ImageCompressor::CompressionManager::ApplyGaussianFilterToImage(QImage *image, int numOfIterations)

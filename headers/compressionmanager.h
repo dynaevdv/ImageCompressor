@@ -18,7 +18,6 @@ namespace ImageCompressor
         CompressionManager();
 
         // Variables for perfomance optimization
-        QImage* m_tmpImage;
         QMatrix3x3 m_kernel;
         float m_kernelSum;
     };

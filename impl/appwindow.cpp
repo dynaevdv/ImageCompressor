@@ -78,7 +78,7 @@ void ImageCompressor::AppWindow::initControlBlock()
 void ImageCompressor::AppWindow::initImageBlock()
 {
     m_imageBlock = new QWidget(this);
-    m_imageBlock->move(m_spaceBetweenElements, m_heightOfControlBlock + m_spaceBetweenElements * 2);
+    m_imageBlock->move(m_spaceBetweenElements, m_heightOfControlBlock + m_spaceBetweenElements);
     m_imageBlock->setFixedSize(this->size().width(),
                                this->size().height() - m_heightOfControlBlock - m_spaceBetweenElements);
 

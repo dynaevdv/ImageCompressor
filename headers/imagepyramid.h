@@ -36,7 +36,6 @@ private:
 
     QSize m_sourceSize;
     QPixmap* m_sourceImage;
-    QString m_filename;
     QString m_pathToFile;
     int m_numberOfFiltrationIterations = 3;
     float m_scaleFactor = 2.0f;
