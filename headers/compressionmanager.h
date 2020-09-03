@@ -12,7 +12,7 @@ namespace ImageCompressor
         static CompressionManager& Instance();
         ~CompressionManager();
 
-        void CompressImage(QImage* image, int numOfIterations);
+        void ApplyGaussianFilterToImage(QImage* image, int numOfIterations);
 
     private:
         CompressionManager();

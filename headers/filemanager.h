@@ -14,12 +14,13 @@ namespace ImageCompressor
     class FileManager
     {
     public:
-        static QPixmap* GetPixmapViaGui();
-        static QString GetLastFilename();
+        static QPixmap* GetPixmapFromFile(QString path);
+        static QString GetPathOfImageViaDialog();
+        static QString GetLastFileName();
 
     private:
         static QString m_lastFilePath;
-        static QString getPathOfImageViaDialog();
+
     };
 }
 

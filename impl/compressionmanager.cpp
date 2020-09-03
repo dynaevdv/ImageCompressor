@@ -19,7 +19,7 @@ ImageCompressor::CompressionManager::~CompressionManager()
     delete(m_tmpImage);
 }
 
-void ImageCompressor::CompressionManager::CompressImage(QImage *image, int numOfIterations)
+void ImageCompressor::CompressionManager::ApplyGaussianFilterToImage(QImage *image, int numOfIterations)
 {
     // Check for the end of recursion
     if (numOfIterations > 0)
@@ -78,6 +78,6 @@ void ImageCompressor::CompressionManager::CompressImage(QImage *image, int numOf
             }
         }
 
-        CompressImage(image, numOfIterations - 1);
+        ApplyGaussianFilterToImage(image, numOfIterations - 1);
     }
 }

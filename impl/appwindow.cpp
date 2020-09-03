@@ -17,7 +17,7 @@ ImageCompressor::AppWindow::~AppWindow()
 
 void ImageCompressor::AppWindow::openAndShowImage()
 {
-    QPixmap* sourcePixMap = FileManager::GetPixmapViaGui();
+    QPixmap* sourcePixMap = FileManager::GetPixmapFromFile(FileManager::GetPathOfImageViaDialog());
 
     // Check for closed GUI or something gone wrong
     if (sourcePixMap != nullptr)
@@ -25,7 +25,7 @@ void ImageCompressor::AppWindow::openAndShowImage()
         prepareWindowForNewImage();
 
         addNewPyramide(sourcePixMap,
-                       FileManager::GetLastFilename());
+                       FileManager::GetLastFileName());
 
         renderPyramide(m_activePyramide);
 
@@ -36,9 +36,7 @@ void ImageCompressor::AppWindow::openAndShowImage()
 
 void ImageCompressor::AppWindow::setPyramideLayer(int index)
 {
-    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(index));
-    layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    m_activeLabel->setPixmap(layer);
+    m_activeLabel->setPixmap(m_activePyramide->GetPyramideLayer(0));
     m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
 }
 
@@ -55,10 +53,13 @@ void ImageCompressor::AppWindow::setNumberOfFilterIterations(int number)
 void ImageCompressor::AppWindow::setActivePyramide(int index)
 {
     m_activePyramide = m_pyramides[index];
-    QPixmap layer = QPixmap::fromImage(*m_activePyramide->GetLayerFromPyramide(0));
-    layer = layer.scaled(m_activePyramide->GetSourceImageSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    m_activeLabel->setPixmap(layer);
+
+    QPixmap* layer = m_activePyramide->GetPyramideLayer(0);
+
+    m_activeLabel->setPixmap(*layer);
     m_activeLabel->resize(m_activePyramide->GetSourceImageSize());
+
+    delete(layer);
 
     fillLayersCombobox();
 }
@@ -243,7 +244,7 @@ void ImageCompressor::AppWindow::sortPyramidesByDiagonal()
 void ImageCompressor::AppWindow::addNewPyramide(QPixmap *image, const QString &filepath)
 {
     ImagePyramide* pyramide = new ImagePyramide(image,
-                                                ImageCompressor::FileManager::GetLastFilename());
+                                                ImageCompressor::FileManager::GetLastFileName());
 
     pyramide->SetNumberOfFiltrationIterations(m_numberOfFilterIteration);
     pyramide->SetScaleFactor(m_scaleFactor);

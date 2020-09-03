@@ -4,24 +4,13 @@ ImageCompressor::ImagePyramide::ImagePyramide(QPixmap* inputPixmap, const QStrin
 {
     m_sourceSize = inputPixmap->size();
     m_pathToFile = pathToImage;
-    m_pyramide.push_back(new QImage(inputPixmap->toImage()));
-    calculatePyramide();
+    m_sourceImage = inputPixmap;
+    calculateLayerResolutions();
 }
 
 ImageCompressor::ImagePyramide::~ImagePyramide()
 {
-    for (auto image : m_pyramide)
-    {
-        delete(image);
-    }
 
-    m_pyramide.clear();
-}
-
-QImage* ImageCompressor::ImagePyramide::GetLayerFromPyramide(const int &index)
-{
-    qDebug() << "Getlayer:" << index;
-    return m_pyramide[index];
 }
 
 void ImageCompressor::ImagePyramide::SetScaleFactor(const float &scaleFactor)
@@ -34,20 +23,32 @@ QSize ImageCompressor::ImagePyramide::GetSourceImageSize()
     return m_sourceSize;
 }
 
+QPixmap ImageCompressor::ImagePyramide::GetPyramideLayer(const int &layerIndex)
+{
+    QImage tmpImage = m_sourceImage->toImage();
+
+    for (int i = 0; i < layerIndex; i++)
+    {
+        CompressionManager::Instance().ApplyGaussianFilterToImage(&tmpImage, m_numberOfFiltrationIterations);
+        tmpImage.scaled(m_layerResolutions[i]);
+    }
+
+    return QPixmap::fromImage(tmpImage);
+}
+
 QSize ImageCompressor::ImagePyramide::GetResolutionOfLayer(const int &index)
 {
-    return m_pyramide[index]->size();
+    return m_layerResolutions[index];
 }
 
 int ImageCompressor::ImagePyramide::GetDiagonalOfLayer(const int &index)
 {
-    auto size = m_pyramide[index]->size();
-    return size.width() * size.height();
+    return m_layerResolutions[index].width() * m_layerResolutions[index].height();
 }
 
 int ImageCompressor::ImagePyramide::GetPyramideSize()
 {
-    return m_pyramide.size();
+    return m_layerResolutions.size();
 }
 
 QString ImageCompressor::ImagePyramide::GetFilename()
@@ -71,19 +72,15 @@ void ImageCompressor::ImagePyramide::SetNumberOfFiltrationIterations(const int &
     m_numberOfFiltrationIterations = numberOfIterations;
 }
 
-void ImageCompressor::ImagePyramide::calculatePyramide()
+void ImageCompressor::ImagePyramide::calculateLayerResolutions()
 {
-    QImage* source = m_pyramide[0]; // Source image
+    QSize tmp = m_sourceImage->size();
+    m_layerResolutions.push_back(tmp); // [0] - source resolution
 
-    while (source->size().width() > 2 && source->size().height() > 2)
+    while (tmp.width() > 2 && tmp.height() > 2)
     {
-        QImage* tmp1 = new QImage(source->copy());
-        ImageCompressor::CompressionManager::Instance().CompressImage(tmp1, m_numberOfFiltrationIterations);
-        *tmp1 = tmp1->scaledToHeight((int) (tmp1->size().height() / m_scaleFactor), Qt::SmoothTransformation);
-        qDebug() << "Size: " << tmp1->size();
-        m_pyramide.push_back(tmp1);
-        source = tmp1; // now source is the next layer
+        tmp.setWidth(std::round((float) tmp.width() / m_scaleFactor));
+        tmp.setHeight(std::round((float) tmp.height() / m_scaleFactor));
+        m_layerResolutions.push_back(tmp);
     }
-
-    qDebug() << "Number of layers: " << m_pyramide.size();
 }
